@@ -1,0 +1,118 @@
+{
+  "id": "arena3",
+  "name": "Juggling Tunnel",
+  "background": "#DDA0DD",
+  "startPoint": { "x": 100, "y": 550 },
+  "finishLine": { "x": 1150, "y": 250 },
+  "platforms": [
+    {
+      "x": 50,
+      "y": 600,
+      "width": 120,
+      "height": 30,
+      "type": "static"
+    },
+    {
+      "x": 200,
+      "y": 550,
+      "width": 80,
+      "height": 30,
+      "type": "static"
+    },
+    {
+      "x": 320,
+      "y": 500,
+      "width": 80,
+      "height": 30,
+      "type": "moving",
+      "moveSpeed": 3,
+      "moveDistance": 120,
+      "moveAxis": "horizontal"
+    },
+    {
+      "x": 480,
+      "y": 450,
+      "width": 70,
+      "height": 30,
+      "type": "static"
+    },
+    {
+      "x": 600,
+      "y": 400,
+      "width": 70,
+      "height": 30,
+      "type": "moving",
+      "moveSpeed": 2.5,
+      "moveDistance": 100,
+      "moveAxis": "vertical"
+    },
+    {
+      "x": 720,
+      "y": 350,
+      "width": 70,
+      "height": 30,
+      "type": "static"
+    },
+    {
+      "x": 840,
+      "y": 300,
+      "width": 70,
+      "height": 30,
+      "type": "moving",
+      "moveSpeed": 3,
+      "moveDistance": 80,
+      "moveAxis": "horizontal"
+    },
+    {
+      "x": 970,
+      "y": 250,
+      "width": 80,
+      "height": 30,
+      "type": "static"
+    },
+    {
+      "x": 1100,
+      "y": 300,
+      "width": 150,
+      "height": 30,
+      "type": "static"
+    },
+    {
+      "x": 0,
+      "y": 700,
+      "width": 1280,
+      "height": 20,
+      "type": "static"
+    }
+  ],
+  "obstacles": [
+    {
+      "x": 220,
+      "y": 520,
+      "type": "spike",
+      "width": 30,
+      "height": 30
+    },
+    {
+      "x": 500,
+      "y": 420,
+      "type": "spike",
+      "width": 30,
+      "height": 30
+    },
+    {
+      "x": 740,
+      "y": 320,
+      "type": "spike",
+      "width": 30,
+      "height": 30
+    },
+    {
+      "x": 990,
+      "y": 220,
+      "type": "spike",
+      "width": 30,
+      "height": 30
+    }
+  ]
+}

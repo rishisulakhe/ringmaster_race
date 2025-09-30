@@ -14,9 +14,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id    Int    @id @default(autoincrement())
-  name  String
-  email String @unique
+model Player {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // bcrypt hashed
+  createdAt DateTime @default(now())
+
+  soloRuns  SoloRun[]
+}
+
+model Arena {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  difficulty  Int       // 1=Easy, 2=Medium, 3=Hard
+  description String?
+  unlockAfter String?   // ID of arena that must be completed first
+
+  soloRuns    SoloRun[]
+}
+
+model SoloRun {
+  id          String   @id @default(cuid())
+  playerId    String
+  arenaId     String
+  timeMs      Int
+  completedAt DateTime @default(now())
+
+  player      Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  arena       Arena    @relation(fields: [arenaId], references: [id], onDelete: Cascade)
+
+  @@index([arenaId, timeMs])
+  @@index([playerId])
 }
 

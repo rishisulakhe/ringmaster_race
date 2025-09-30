@@ -1,0 +1,59 @@
+{
+  "id": "arena1",
+  "name": "Tightrope Walkway",
+  "background": "#87CEEB",
+  "startPoint": { "x": 100, "y": 500 },
+  "finishLine": { "x": 1150, "y": 400 },
+  "platforms": [
+    {
+      "x": 50,
+      "y": 550,
+      "width": 200,
+      "height": 30,
+      "type": "static"
+    },
+    {
+      "x": 300,
+      "y": 500,
+      "width": 150,
+      "height": 30,
+      "type": "static"
+    },
+    {
+      "x": 500,
+      "y": 450,
+      "width": 150,
+      "height": 30,
+      "type": "static"
+    },
+    {
+      "x": 700,
+      "y": 400,
+      "width": 150,
+      "height": 30,
+      "type": "static"
+    },
+    {
+      "x": 900,
+      "y": 450,
+      "width": 150,
+      "height": 30,
+      "type": "static"
+    },
+    {
+      "x": 1100,
+      "y": 450,
+      "width": 150,
+      "height": 30,
+      "type": "static"
+    },
+    {
+      "x": 0,
+      "y": 700,
+      "width": 1280,
+      "height": 20,
+      "type": "static"
+    }
+  ],
+  "obstacles": []
+}
