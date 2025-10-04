@@ -11,6 +11,7 @@ export const CIRCUS_COLORS = {
   emeraldGreen: '#50C878',
   sapphireBlue: '#0F52BA',
 
+
   // Accents
   white: '#FFFFFF',
   black: '#000000',

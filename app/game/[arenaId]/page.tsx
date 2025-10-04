@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { GameCanvas } from '@/components/GameCanvas';
+import { CelebrationOverlay } from '@/components/CelebrationOverlay';
 import { ResultScene } from '@/game/scenes/ResultScene';
 import type { LevelData } from '@/types/game';
 import type { CompleteRunResponse } from '@/types/api';
@@ -30,6 +32,8 @@ export default function GamePage() {
   const [resultData, setResultData] = useState<CompleteRunResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationShown, setCelebrationShown] = useState(false);
 
   useEffect(() => {
     loadArenaData();
@@ -85,7 +89,14 @@ export default function GamePage() {
 
       const data: CompleteRunResponse = await response.json();
       setResultData(data);
-      setShowResult(true);
+
+      // Show celebration first if it's a world record or personal best
+      if ((data.isWorldRecord || data.isNewRecord) && !celebrationShown) {
+        setShowCelebration(true);
+        setCelebrationShown(true);
+      } else {
+        setShowResult(true);
+      }
     } catch (err) {
       console.error('Error saving run:', err);
       alert('Failed to save your time. Please try again.');
@@ -127,72 +138,180 @@ export default function GamePage() {
     );
   }
 
+  if (showCelebration && resultData) {
+    return (
+      <CelebrationOverlay
+        isWorldRecord={resultData.isWorldRecord}
+        isPersonalBest={resultData.isNewRecord}
+        timeMs={resultData.run.timeMs}
+        onComplete={() => {
+          setShowCelebration(false);
+          setShowResult(true);
+        }}
+      />
+    );
+  }
+
   if (showResult && resultData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-800 to-orange-700 p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-gray-900 rounded-lg p-8">
-            <h1 className="text-4xl font-bold text-white text-center mb-8">
+      <div
+        className="min-h-screen p-8 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(180deg, #0F1B4C 0%, #1E3A8A 50%, #663399 100%)',
+        }}
+      >
+        {/* Animated stars */}
+        {[...Array(30)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-white rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              opacity: [0.2, 1, 0.2],
+              scale: [1, 1.5, 1],
+            }}
+            transition={{
+              duration: 2 + Math.random() * 3,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+
+        <div className="max-w-4xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="circus-card rounded-3xl p-8 shadow-2xl"
+          >
+            {/* Header */}
+            <motion.h1
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              className="text-6xl font-bold text-center mb-6"
+              style={{
+                fontFamily: 'var(--font-alfa-slab)',
+                color: '#8B0000',
+                textShadow: '2px 2px 0 #FFD700',
+              }}
+            >
               🎪 {arenaName} Complete! 🎪
-            </h1>
+            </motion.h1>
 
             <div className="space-y-6">
+              {/* World Record Badge */}
               {resultData.isWorldRecord && (
-                <div className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-6 text-center animate-pulse">
-                  <div className="text-6xl mb-2">🏆</div>
-                  <div className="text-white font-bold text-3xl">
-                    NEW WORLD RECORD!
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1, rotate: [0, -5, 5, 0] }}
+                  transition={{ type: 'spring', stiffness: 200 }}
+                  className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-2xl p-6 text-center border-4 border-yellow-600"
+                >
+                  <div className="text-8xl mb-2">🏆</div>
+                  <div
+                    className="text-white font-bold text-4xl"
+                    style={{ fontFamily: 'var(--font-alfa-slab)' }}
+                  >
+                    WORLD RECORD HOLDER!
                   </div>
-                </div>
+                </motion.div>
               )}
 
-              <div className="bg-gray-800 rounded-lg p-6 text-center">
-                <div className="text-gray-400 mb-2">Your Time</div>
-                <div className="text-yellow-400 font-mono text-5xl font-bold">
+              {/* Time Display */}
+              <motion.div
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                className="bg-gradient-to-br from-red-900 to-purple-900 rounded-2xl p-6 text-center border-4 border-gold"
+              >
+                <div className="text-yellow-300 mb-2 text-xl font-bold" style={{ fontFamily: 'var(--font-righteous)' }}>
+                  Your Time
+                </div>
+                <div
+                  className="text-yellow-400 font-mono text-6xl font-bold"
+                  style={{ fontFamily: 'var(--font-orbitron)', textShadow: '0 0 20px rgba(255,215,0,0.5)' }}
+                >
                   {formatTime(resultData.run.timeMs)}
                 </div>
-              </div>
+              </motion.div>
 
+              {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-800 rounded-lg p-4 text-center">
-                  <div className="text-gray-400 mb-2">Rank</div>
-                  <div className="text-white text-3xl font-bold">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="bg-gradient-to-br from-purple-800 to-blue-900 rounded-2xl p-6 text-center border-3 border-purple-600"
+                >
+                  <div className="text-cream mb-2 font-bold" style={{ fontFamily: 'var(--font-righteous)' }}>
+                    Global Rank
+                  </div>
+                  <div className="text-white text-5xl font-bold" style={{ fontFamily: 'var(--font-bungee)' }}>
                     #{resultData.run.rank}
                   </div>
-                </div>
+                  {resultData.run.rank === 1 && <div className="text-4xl mt-2">👑</div>}
+                  {resultData.run.rank === 2 && <div className="text-4xl mt-2">🥈</div>}
+                  {resultData.run.rank === 3 && <div className="text-4xl mt-2">🥉</div>}
+                </motion.div>
 
-                <div className="bg-gray-800 rounded-lg p-4 text-center">
-                  <div className="text-gray-400 mb-2">Personal Best</div>
-                  <div className="text-green-400 text-3xl font-bold font-mono">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="bg-gradient-to-br from-green-800 to-emerald-900 rounded-2xl p-6 text-center border-3 border-green-600"
+                >
+                  <div className="text-cream mb-2 font-bold" style={{ fontFamily: 'var(--font-righteous)' }}>
+                    Personal Best
+                  </div>
+                  <div
+                    className="text-green-300 text-4xl font-bold font-mono"
+                    style={{ fontFamily: 'var(--font-orbitron)' }}
+                  >
                     {formatTime(resultData.personalBest)}
                   </div>
-                </div>
+                  {resultData.isNewRecord && <div className="text-3xl mt-2">⭐</div>}
+                </motion.div>
               </div>
 
+              {/* Personal Best Banner */}
               {resultData.isNewRecord && !resultData.isWorldRecord && (
-                <div className="bg-green-600 rounded-lg p-4 text-center">
-                  <div className="text-white font-bold text-xl">
-                    ⭐ New Personal Best! ⭐
+                <motion.div
+                  initial={{ x: -100, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-4 text-center border-3 border-green-800"
+                >
+                  <div
+                    className="text-white font-bold text-2xl flex items-center justify-center gap-2"
+                    style={{ fontFamily: 'var(--font-bungee)' }}
+                  >
+                    <span>⭐</span>
+                    <span>NEW PERSONAL BEST!</span>
+                    <span>⭐</span>
                   </div>
-                </div>
+                </motion.div>
               )}
 
-              <div className="flex gap-4">
-                <button
+              {/* Action Buttons */}
+              <div className="flex gap-4 mt-8">
+                <motion.button
                   onClick={handlePlayAgain}
-                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-lg text-xl"
+                  className="flex-1 circus-button font-bold py-5 rounded-xl text-2xl text-red-900"
+                  style={{ fontFamily: 'var(--font-bungee)' }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  🔄 Play Again
-                </button>
-                <button
+                  🔄 TRY AGAIN
+                </motion.button>
+                <motion.button
                   onClick={handleBackToMenu}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-lg text-xl"
+                  className="flex-1 circus-button font-bold py-5 rounded-xl text-2xl text-red-900"
+                  style={{ fontFamily: 'var(--font-bungee)' }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  🏠 Back to Menu
-                </button>
+                  🏠 MAIN STAGE
+                </motion.button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     );

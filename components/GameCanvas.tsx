@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import * as Phaser from 'phaser';
+import { TightropeArenaScene } from '@/game/scenes/TightropeArenaScene';
+import { ClownAlleyScene } from '@/game/scenes/ClownAlleyScene';
+import { JugglingTunnelScene } from '@/game/scenes/JugglingTunnelScene';
 import { GameScene } from '@/game/scenes/GameScene';
 import { ResultScene } from '@/game/scenes/ResultScene';
 import { BootScene } from '@/game/scenes/BootScene';
@@ -30,10 +33,32 @@ export function GameCanvas({ levelData, arenaId, onComplete }: GameCanvasProps) 
       return;
     }
 
+    // Determine which scene to use based on arenaId
+    let gameSceneClass;
+    let sceneKey;
+
+    switch (arenaId) {
+      case 'arena1':
+        gameSceneClass = TightropeArenaScene;
+        sceneKey = 'TightropeArenaScene';
+        break;
+      case 'arena2':
+        gameSceneClass = ClownAlleyScene;
+        sceneKey = 'ClownAlleyScene';
+        break;
+      case 'arena3':
+        gameSceneClass = JugglingTunnelScene;
+        sceneKey = 'JugglingTunnelScene';
+        break;
+      default:
+        gameSceneClass = GameScene;
+        sceneKey = 'GameScene';
+    }
+
     const config: Phaser.Types.Core.GameConfig = {
       ...GAME_CONFIG,
       parent: containerRef.current,
-      scene: [BootScene, GameScene, ResultScene],
+      scene: [BootScene, gameSceneClass, ResultScene],
     };
 
     const game = new Phaser.Game(config);
@@ -42,9 +67,9 @@ export function GameCanvas({ levelData, arenaId, onComplete }: GameCanvasProps) 
     // Wait for game to be ready, then start with level data
     game.events.once('ready', () => {
       setIsLoading(false);
-      const gameScene = game.scene.getScene('GameScene') as GameScene;
-      if (gameScene) {
-        game.scene.start('GameScene', {
+      const scene = game.scene.getScene(sceneKey);
+      if (scene) {
+        game.scene.start(sceneKey, {
           levelData,
           onComplete,
         });
@@ -61,10 +86,13 @@ export function GameCanvas({ levelData, arenaId, onComplete }: GameCanvasProps) 
   }, [levelData, arenaId, onComplete]);
 
   return (
-    <div className="relative w-full flex justify-center items-center bg-gray-900 rounded-lg overflow-hidden">
+    <div className="relative w-full flex justify-center items-center bg-gray-900 rounded-lg overflow-hidden shadow-2xl border-4 border-amber-600">
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white text-2xl">
-          Loading Game...
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 to-blue-900 text-white">
+          <div className="text-6xl mb-4 animate-bounce">🎪</div>
+          <div className="text-3xl font-bold" style={{ fontFamily: 'var(--font-alfa-slab)' }}>
+            Preparing the Stage...
+          </div>
         </div>
       )}
       <div ref={containerRef} id="game-container" className="w-full max-w-[1280px]" />
