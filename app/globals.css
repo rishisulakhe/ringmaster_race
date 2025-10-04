@@ -1,26 +1,150 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Circus Color Palette */
+  --circus-deep-red: #8B0000;
+  --circus-cream: #FFFDD0;
+  --circus-gold: #FFD700;
+  --circus-royal-purple: #663399;
+  --circus-emerald-green: #50C878;
+  --circus-sapphire-blue: #0F52BA;
+
+  /* Theme Colors */
+  --background: #0F1B4C;
+  --foreground: #FFFDD0;
+
+  /* Font Variables */
+  --font-header: var(--font-alfa-slab);
+  --font-display: var(--font-righteous);
+  --font-accent: var(--font-bungee);
+  --font-timer: var(--font-orbitron);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-righteous);
+  --font-mono: var(--font-orbitron);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-righteous), Arial, Helvetica, sans-serif;
+}
+
+/* Circus-themed animations */
+@keyframes carnival-lights {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes tent-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(1deg); }
+}
+
+@keyframes spotlight-scan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes ticket-tear {
+  0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  100% { clip-path: polygon(0 0, 95% 5%, 100% 100%, 5% 95%); }
+}
+
+.carnival-lights {
+  animation: carnival-lights 1.5s ease-in-out infinite;
+}
+
+.tent-sway {
+  animation: tent-sway 4s ease-in-out infinite;
+}
+
+.spotlight-scan {
+  animation: spotlight-scan 3s linear infinite;
+}
+
+/* Circus poster card effect */
+.circus-card {
+  background: linear-gradient(135deg, var(--circus-cream) 0%, #FFF8DC 100%);
+  border: 6px solid var(--circus-gold);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    inset 0 0 20px rgba(255, 215, 0, 0.1);
+  position: relative;
+}
+
+.circus-card::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border: 2px solid var(--circus-deep-red);
+  pointer-events: none;
+}
+
+/* Vintage ticket button */
+.circus-button {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border: 3px solid var(--circus-deep-red);
+  box-shadow:
+    0 4px 15px rgba(255, 215, 0, 0.4),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.circus-button:hover {
+  box-shadow:
+    0 6px 20px rgba(255, 215, 0, 0.6),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.circus-button:active {
+  transform: translateY(0);
+  box-shadow:
+    0 2px 10px rgba(255, 215, 0, 0.4),
+    inset 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Circus tent stripes */
+.tent-stripes-red {
+  background: repeating-linear-gradient(
+    -45deg,
+    #DC143C,
+    #DC143C 20px,
+    #FFFFFF 20px,
+    #FFFFFF 40px
+  );
+}
+
+.tent-stripes-purple {
+  background: repeating-linear-gradient(
+    -45deg,
+    #663399,
+    #663399 20px,
+    #FFD700 20px,
+    #FFD700 40px
+  );
+}
+
+.tent-stripes-blue {
+  background: repeating-linear-gradient(
+    -45deg,
+    #0F52BA,
+    #0F52BA 20px,
+    #C0C0C0 20px,
+    #C0C0C0 40px
+  );
 }

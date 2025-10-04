@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { FestivalMap } from '@/components/FestivalMap';
+import { FestivalMapEnhanced } from '@/components/FestivalMapEnhanced';
 import { getCurrentPlayer } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import type { ArenaResponse } from '@/types/api';
@@ -64,5 +64,5 @@ export default async function MenuPage() {
     };
   });
 
-  return <FestivalMap arenas={arenaData} />;
+  return <FestivalMapEnhanced arenas={arenaData} />;
 }
