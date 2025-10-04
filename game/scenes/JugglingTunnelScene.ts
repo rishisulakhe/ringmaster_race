@@ -53,7 +53,7 @@ export class JugglingTunnelScene extends Phaser.Scene {
 
     // Create physics groups
     this.platforms = this.physics.add.staticGroup();
-    this.obstacles = this.add.group();
+    this.obstacles = this.physics.add.group();
     this.jugglingObjects = this.add.group();
 
     // Create level elements
@@ -321,11 +321,15 @@ export class JugglingTunnelScene extends Phaser.Scene {
     const graphics = this.add.graphics();
     graphics.fillStyle(0xC0C0C0, 1);
     graphics.fillCircle(0, 0, 16);
-    // Elegant accents
+    // Elegant accents - blue border
     graphics.lineStyle(2, 0x0F52BA, 1);
     graphics.strokeCircle(0, 0, 16);
+    // Gold accents
     graphics.fillStyle(0xFFD700, 1);
-    graphics.fillStar(0, 0, 5, 6, 3);
+    graphics.fillCircle(-6, -6, 2);
+    graphics.fillCircle(6, -6, 2);
+    graphics.fillCircle(-6, 6, 2);
+    graphics.fillCircle(6, 6, 2);
     graphics.generateTexture('juggler', 32, 32);
     graphics.destroy();
 

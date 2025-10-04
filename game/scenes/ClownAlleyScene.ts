@@ -55,7 +55,7 @@ export class ClownAlleyScene extends Phaser.Scene {
     // Create physics groups
     this.platforms = this.physics.add.staticGroup();
     this.movingPlatforms = this.add.group();
-    this.obstacles = this.add.group();
+    this.obstacles = this.physics.add.group();
     this.bananaPeels = this.physics.add.group();
     this.honkingHorns = this.physics.add.staticGroup();
 
@@ -69,7 +69,7 @@ export class ClownAlleyScene extends Phaser.Scene {
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = {
       W: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-      A: this.input.keyboard!.addKey(Phaser.Input.Keyboard.Key Codes.A),
+      A: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.A),
       D: this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     };
     this.spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -593,7 +593,9 @@ export class ClownAlleyScene extends Phaser.Scene {
 
     if (this.gamePaused) {
       this.physics.pause();
-      this.pieTimer?.paused = true;
+      if (this.pieTimer) {
+        this.pieTimer.paused = true;
+      }
 
       const pauseText = this.add.text(
         this.cameras.main.centerX,
@@ -612,7 +614,9 @@ export class ClownAlleyScene extends Phaser.Scene {
       pauseText.setName('pauseText');
     } else {
       this.physics.resume();
-      this.pieTimer?.paused = false;
+      if (this.pieTimer) {
+        this.pieTimer.paused = false;
+      }
 
       const pauseText = this.children.getByName('pauseText');
       if (pauseText) {

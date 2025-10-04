@@ -57,7 +57,7 @@ export class TightropeArenaScene extends Phaser.Scene {
 
     // Create physics groups
     this.platforms = this.physics.add.staticGroup();
-    this.obstacles = this.add.group();
+    this.obstacles = this.physics.add.group();
 
     // Create level elements
     this.createTightropes();
@@ -571,7 +571,9 @@ export class TightropeArenaScene extends Phaser.Scene {
 
     if (this.gamePaused) {
       this.physics.pause();
-      this.windTimer?.paused = true;
+      if (this.windTimer) {
+        this.windTimer.paused = true;
+      }
 
       const pauseText = this.add.text(
         this.cameras.main.centerX,
@@ -590,7 +592,9 @@ export class TightropeArenaScene extends Phaser.Scene {
       pauseText.setName('pauseText');
     } else {
       this.physics.resume();
-      this.windTimer?.paused = false;
+      if (this.windTimer) {
+        this.windTimer.paused = false;
+      }
 
       const pauseText = this.children.getByName('pauseText');
       if (pauseText) {

@@ -14,7 +14,6 @@ interface FestivalMapProps {
 export function FestivalMapEnhanced({ arenas }: FestivalMapProps) {
   const router = useRouter();
   const [showCurtain, setShowCurtain] = useState(true);
-  const [selectedArena, setSelectedArena] = useState<string | null>(null);
 
   const formatTime = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
@@ -27,11 +26,7 @@ export function FestivalMapEnhanced({ arenas }: FestivalMapProps) {
 
   const handleArenaClick = (arena: ArenaResponse) => {
     if (arena.isUnlocked) {
-      setSelectedArena(arena.id);
-      // Small delay for visual feedback
-      setTimeout(() => {
-        router.push(`/game/${arena.id}`);
-      }, 300);
+      router.push(`/game/${arena.id}`);
     }
   };
 

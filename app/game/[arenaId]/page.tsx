@@ -5,7 +5,6 @@ import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { GameCanvas } from '@/components/GameCanvas';
 import { CelebrationOverlay } from '@/components/CelebrationOverlay';
-import { ResultScene } from '@/game/scenes/ResultScene';
 import type { LevelData } from '@/types/game';
 import type { CompleteRunResponse } from '@/types/api';
 
@@ -37,6 +36,7 @@ export default function GamePage() {
 
   useEffect(() => {
     loadArenaData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [arenaId]);
 
   const loadArenaData = async () => {

@@ -13,7 +13,6 @@ interface CelebrationOverlayProps {
 export function CelebrationOverlay({
   isWorldRecord,
   isPersonalBest,
-  timeMs,
   onComplete,
 }: CelebrationOverlayProps) {
   const [phase, setPhase] = useState<'drumroll' | 'explosion' | 'complete'>('drumroll');
@@ -240,7 +239,7 @@ export function CelebrationOverlay({
                   className="text-4xl text-yellow-200 font-bold"
                   style={{ fontFamily: 'var(--font-righteous)' }}
                 >
-                  You're the Champion!
+                  You&apos;re the Champion!
                 </div>
               </motion.div>
 
@@ -307,7 +306,7 @@ export function CelebrationOverlay({
                 PERSONAL BEST!
               </motion.div>
               <div className="text-2xl text-white" style={{ fontFamily: 'var(--font-righteous)' }}>
-                You're improving! Keep it up!
+                You&apos;re improving! Keep it up!
               </div>
 
               {/* Bell ring effect */}
