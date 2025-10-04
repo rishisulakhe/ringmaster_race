@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import type { LevelData } from '@/types/game';
 import { ARENA_THEMES } from '@/lib/circus-theme';
+import { PerformanceSystem } from '@/game/systems/PerformanceSystem';
 
 /**
  * Arena 1: Tightrope Walkway
@@ -36,6 +37,10 @@ export class TightropeArenaScene extends Phaser.Scene {
   private isOnTightrope: boolean = false;
   private windTimer!: Phaser.Time.TimerEvent;
   private crowdAmbience!: Phaser.GameObjects.Group;
+
+  // Performance system
+  private performanceSystem!: PerformanceSystem;
+  private lastTouchDown: boolean = false;
 
   constructor() {
     super({ key: 'TightropeArenaScene' });
@@ -82,6 +87,9 @@ export class TightropeArenaScene extends Phaser.Scene {
 
     // Create HUD
     this.createHUD();
+
+    // Create performance system
+    this.performanceSystem = new PerformanceSystem(this);
 
     // Set checkpoint
     this.checkpointX = this.levelData.startPoint.x;
@@ -424,7 +432,7 @@ export class TightropeArenaScene extends Phaser.Scene {
     this.startTime = Date.now();
   }
 
-  update() {
+  update(_time: number, delta: number) {
     if (!this.gameStarted || this.gamePaused || this.gameFinished) {
       return;
     }
@@ -440,6 +448,27 @@ export class TightropeArenaScene extends Phaser.Scene {
     this.updateBalance();
     this.updateBalanceMeter();
 
+    // Update performance system
+    this.performanceSystem.update();
+
+    // Performance tracking - movement rewards
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    if (Math.abs(body.velocity.x) > 50) {
+      this.performanceSystem.noHesitation(delta);
+    } else {
+      this.performanceSystem.playerStopped(delta);
+    }
+
+    // Track perfect landings
+    if (body.touching.down && !this.lastTouchDown) {
+      // Check if landing was on edge of platform
+      const onEdge = this.checkEdgeLanding();
+      if (onEdge) {
+        this.performanceSystem.perfectLanding();
+      }
+    }
+    this.lastTouchDown = body.touching.down;
+
     // Check if player fell
     if (this.player.y > 750) {
       this.respawnPlayer();
@@ -449,6 +478,27 @@ export class TightropeArenaScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.escKey)) {
       this.togglePause();
     }
+  }
+
+  private checkEdgeLanding(): boolean {
+    // Check if player is near edge of platform (within 20px)
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    let nearEdge = false;
+
+    this.platforms.getChildren().forEach((platform: any) => {
+      const platformBody = platform.body as Phaser.Physics.Arcade.Body;
+      if (body.touching.down && platformBody) {
+        const playerCenterX = body.x + body.width / 2;
+        const platformLeft = platformBody.x;
+        const platformRight = platformBody.x + platformBody.width;
+
+        if (Math.abs(playerCenterX - platformLeft) < 20 || Math.abs(playerCenterX - platformRight) < 20) {
+          nearEdge = true;
+        }
+      }
+    });
+
+    return nearEdge;
   }
 
   handleInput() {
@@ -516,11 +566,13 @@ export class TightropeArenaScene extends Phaser.Scene {
 
   hitObstacle() {
     if (!this.gameFinished) {
+      this.performanceSystem.hitObstacle();
       this.respawnPlayer();
     }
   }
 
   respawnPlayer() {
+    this.performanceSystem.playerFell();
     this.player.setPosition(this.checkpointX, this.checkpointY);
     this.player.setVelocity(0, 0);
     this.balance = 0;
@@ -533,16 +585,23 @@ export class TightropeArenaScene extends Phaser.Scene {
   reachFinish() {
     if (!this.gameFinished) {
       this.gameFinished = true;
-      const finalTime = Date.now() - this.startTime;
+      const baseTime = Date.now() - this.startTime;
+      const timeBonus = this.performanceSystem.getTimeBonus();
+      const finalTime = Math.max(0, baseTime - timeBonus);
 
       // Victory animation
       this.player.setVelocity(0, 0);
       this.player.setAngle(0);
 
+      let bonusText = '';
+      if (timeBonus > 0) {
+        bonusText = `\nCrowd Bonus: -${(timeBonus / 1000).toFixed(2)}s!`;
+      }
+
       const victoryText = this.add.text(
         this.cameras.main.centerX,
         this.cameras.main.centerY,
-        '🏆 PERFORMANCE COMPLETE! 🏆\n' + this.formatTime(finalTime),
+        '🏆 PERFORMANCE COMPLETE! 🏆\n' + this.formatTime(finalTime) + bonusText,
         {
           fontSize: '48px',
           color: '#FFD700',

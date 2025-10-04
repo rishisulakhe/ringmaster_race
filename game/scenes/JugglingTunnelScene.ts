@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import type { LevelData } from '@/types/game';
 import { ARENA_THEMES } from '@/lib/circus-theme';
+import { PerformanceSystem } from '@/game/systems/PerformanceSystem';
 
 /**
  * Arena 3: Juggling Tunnel
@@ -33,6 +34,11 @@ export class JugglingTunnelScene extends Phaser.Scene {
   private rotationSpeed: number = 0.002;
   private backgroundGraphics!: Phaser.GameObjects.Graphics;
   private jugglingObjects!: Phaser.GameObjects.Group;
+
+  // Performance system
+  private performanceSystem!: PerformanceSystem;
+  private lastTouchDown: boolean = false;
+  private obstacleProximity: number = 0;
 
   constructor() {
     super({ key: 'JugglingTunnelScene' });
@@ -79,6 +85,9 @@ export class JugglingTunnelScene extends Phaser.Scene {
 
     // Create HUD
     this.createHUD();
+
+    // Create performance system
+    this.performanceSystem = new PerformanceSystem(this);
 
     // Set checkpoint
     this.checkpointX = this.levelData.startPoint.x;
@@ -405,7 +414,7 @@ export class JugglingTunnelScene extends Phaser.Scene {
     this.startTime = Date.now();
   }
 
-  update() {
+  update(_time: number, delta: number) {
     if (!this.gameStarted || this.gamePaused || this.gameFinished) {
       return;
     }
@@ -414,6 +423,26 @@ export class JugglingTunnelScene extends Phaser.Scene {
     this.timerText.setText(this.formatTime(elapsed));
 
     this.handleInput();
+
+    // Update performance system
+    this.performanceSystem.update();
+
+    // Performance tracking
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    if (Math.abs(body.velocity.x) > 50) {
+      this.performanceSystem.noHesitation(delta);
+    } else {
+      this.performanceSystem.playerStopped(delta);
+    }
+
+    // Check proximity to obstacles for close call rewards
+    this.checkObstacleProximity();
+
+    // Track precision jumps
+    if (body.touching.down && !this.lastTouchDown) {
+      this.performanceSystem.perfectLanding();
+    }
+    this.lastTouchDown = body.touching.down;
 
     // Update tunnel rotation effect
     this.tunnelRotation += this.rotationSpeed;
@@ -442,6 +471,37 @@ export class JugglingTunnelScene extends Phaser.Scene {
     }
   }
 
+  private checkObstacleProximity() {
+    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+    const playerX = playerBody.x + playerBody.width / 2;
+    const playerY = playerBody.y + playerBody.height / 2;
+    const closeCallDistance = 50;
+
+    let minDistance = Infinity;
+    this.obstacles.getChildren().forEach((obstacle: any) => {
+      const obstacleBody = obstacle.body as Phaser.Physics.Arcade.Body;
+      if (obstacleBody) {
+        const obsX = obstacleBody.x + obstacleBody.width / 2;
+        const obsY = obstacleBody.y + obstacleBody.height / 2;
+        const distance = Phaser.Math.Distance.Between(playerX, playerY, obsX, obsY);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+        }
+      }
+    });
+
+    // Reward close calls (threading through obstacles)
+    if (minDistance < closeCallDistance && minDistance > 25) {
+      if (this.obstacleProximity === 0) {
+        this.performanceSystem.obstacleThreading();
+      }
+      this.obstacleProximity = 1;
+    } else {
+      this.obstacleProximity = 0;
+    }
+  }
+
   handleInput() {
     const body = this.player.body as Phaser.Physics.Arcade.Body;
 
@@ -465,11 +525,13 @@ export class JugglingTunnelScene extends Phaser.Scene {
 
   hitObstacle() {
     if (!this.gameFinished) {
+      this.performanceSystem.hitObstacle();
       this.respawnPlayer();
     }
   }
 
   respawnPlayer() {
+    this.performanceSystem.playerFell();
     this.player.setPosition(this.checkpointX, this.checkpointY);
     this.player.setVelocity(0, 0);
 
@@ -480,14 +542,21 @@ export class JugglingTunnelScene extends Phaser.Scene {
   reachFinish() {
     if (!this.gameFinished) {
       this.gameFinished = true;
-      const finalTime = Date.now() - this.startTime;
+      const baseTime = Date.now() - this.startTime;
+      const timeBonus = this.performanceSystem.getTimeBonus();
+      const finalTime = Math.max(0, baseTime - timeBonus);
 
       this.player.setVelocity(0, 0);
+
+      let bonusText = '';
+      if (timeBonus > 0) {
+        bonusText = `\nCrowd Bonus: -${(timeBonus / 1000).toFixed(2)}s!`;
+      }
 
       const victoryText = this.add.text(
         this.cameras.main.centerX,
         this.cameras.main.centerY,
-        '⭐ MASTERY ACHIEVED! 🎯\n' + this.formatTime(finalTime),
+        '⭐ MASTERY ACHIEVED! 🎯\n' + this.formatTime(finalTime) + bonusText,
         {
           fontSize: '48px',
           color: '#C0C0C0',

@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import type { LevelData } from '@/types/game';
 import { ARENA_THEMES } from '@/lib/circus-theme';
+import { PerformanceSystem } from '@/game/systems/PerformanceSystem';
 
 /**
  * Arena 2: Clown Alley
@@ -33,6 +34,10 @@ export class ClownAlleyScene extends Phaser.Scene {
   private pieTimer!: Phaser.Time.TimerEvent;
   private bananaPeels!: Phaser.Physics.Arcade.Group;
   private honkingHorns!: Phaser.Physics.Arcade.StaticGroup;
+
+  // Performance system
+  private performanceSystem!: PerformanceSystem;
+  private lastTouchDown: boolean = false;
 
   constructor() {
     super({ key: 'ClownAlleyScene' });
@@ -87,6 +92,9 @@ export class ClownAlleyScene extends Phaser.Scene {
 
     // Create HUD
     this.createHUD();
+
+    // Create performance system
+    this.performanceSystem = new PerformanceSystem(this);
 
     // Set checkpoint
     this.checkpointX = this.levelData.startPoint.x;
@@ -430,7 +438,7 @@ export class ClownAlleyScene extends Phaser.Scene {
     this.startTime = Date.now();
   }
 
-  update() {
+  update(_time: number, delta: number) {
     if (!this.gameStarted || this.gamePaused || this.gameFinished) {
       return;
     }
@@ -439,6 +447,23 @@ export class ClownAlleyScene extends Phaser.Scene {
     this.timerText.setText(this.formatTime(elapsed));
 
     this.handleInput();
+
+    // Update performance system
+    this.performanceSystem.update();
+
+    // Performance tracking
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    if (Math.abs(body.velocity.x) > 50) {
+      this.performanceSystem.noHesitation(delta);
+    } else {
+      this.performanceSystem.playerStopped(delta);
+    }
+
+    // Track trick jumps
+    if (body.touching.down && !this.lastTouchDown && Math.abs(body.velocity.y) > 400) {
+      this.performanceSystem.trickJump();
+    }
+    this.lastTouchDown = body.touching.down;
 
     if (this.player.y > 750) {
       this.respawnPlayer();
@@ -484,6 +509,7 @@ export class ClownAlleyScene extends Phaser.Scene {
         onComplete: () => splat.destroy(),
       });
 
+      this.performanceSystem.hitObstacle();
       obstacle.destroy();
       this.respawnPlayer();
     }
@@ -501,6 +527,13 @@ export class ClownAlleyScene extends Phaser.Scene {
       angle: 720,
       duration: 1000,
       onComplete: () => this.player.setAngle(0),
+    });
+
+    // If player recovers well (doesn't fall), give style points
+    this.time.delayedCall(500, () => {
+      if (this.player.y < 700 && !this.gameFinished) {
+        this.performanceSystem.closeCall();
+      }
     });
 
     banana.destroy();
@@ -531,6 +564,7 @@ export class ClownAlleyScene extends Phaser.Scene {
   }
 
   respawnPlayer() {
+    this.performanceSystem.playerFell();
     this.player.setPosition(this.checkpointX, this.checkpointY);
     this.player.setVelocity(0, 0);
     this.player.setAngle(0);
@@ -540,14 +574,21 @@ export class ClownAlleyScene extends Phaser.Scene {
   reachFinish() {
     if (!this.gameFinished) {
       this.gameFinished = true;
-      const finalTime = Date.now() - this.startTime;
+      const baseTime = Date.now() - this.startTime;
+      const timeBonus = this.performanceSystem.getTimeBonus();
+      const finalTime = Math.max(0, baseTime - timeBonus);
 
       this.player.setVelocity(0, 0);
+
+      let bonusText = '';
+      if (timeBonus > 0) {
+        bonusText = `\nCrowd Bonus: -${(timeBonus / 1000).toFixed(2)}s!`;
+      }
 
       const victoryText = this.add.text(
         this.cameras.main.centerX,
         this.cameras.main.centerY,
-        '🎉 WHAT A SHOW! 🤡\n' + this.formatTime(finalTime),
+        '🎉 WHAT A SHOW! 🤡\n' + this.formatTime(finalTime) + bonusText,
         {
           fontSize: '48px',
           color: '#FFE66D',
